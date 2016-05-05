@@ -21,7 +21,7 @@ func TestBlur(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	dst := blur.Gaussian(im, 5)
+	dst := blur.Gaussian(im, 5, blur.ReuseSrc)
 
 	f, err = os.Create("sample/cballs_blur.png")
 	if err != nil {

@@ -6,28 +6,27 @@ import (
 	"math"
 )
 
+type Option int
+
+const (
+	KeepSrc Option = iota
+	ReuseSrc
+)
+
 // fast gaussian blur based on http://blog.ivank.net/fastest-gaussian-blur.html
 
-// Gaussian blurs an image using a fast approximation of gaussian blur
-// with complexity independent of radius.
-func Gaussian(im image.Image, radius int) *image.RGBA {
-	src, dest := rgbaSrcDest(im)
-
-	gaussianBlur(dest, src, radius)
-	return dest
-}
-
-func rgbaSrcDest(im image.Image) (src, dest *image.RGBA) {
-	dest = image.NewRGBA(im.Bounds())
-
-	// make sure src is RGBA, reuse result buffer as source if not
-	src, ok := im.(*image.RGBA)
-	if !ok {
-		src = dest
-		draw.Draw(src, src.Bounds(), im, im.Bounds().Min, draw.Src)
+// Gaussian blurs im using a fast approximation of gaussian blur.
+// It tries to reuse im for the result if option is ReuseSrc.
+// The algorithm has a computational complexity independent of radius.
+func Gaussian(im image.Image, radius int, option Option) *image.RGBA {
+	rgba, ok := im.(*image.RGBA)
+	if !ok || option == KeepSrc {
+		rgba = image.NewRGBA(im.Bounds())
+		draw.Draw(rgba, rgba.Bounds(), im, im.Bounds().Min, draw.Src)
 	}
 
-	return src, dest
+	gaussianBlur(rgba, rgba, radius)
+	return rgba
 }
 
 func gaussianBlur(dst, src *image.RGBA, radius int) {
